@@ -1,18 +1,20 @@
 ## * Header
+## ** interactive
 ## path <- "h:/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/"
 ## setwd(path)
 ## source("BATCH_scenario1.R")
+## ** slurm
+## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
 ## sbatch -a 1-1 -J 'scenario1-ChemoVSChemo' --output=/dev/null --error=/dev/null R CMD BATCH --vanilla BATCH_scenario1-ChemoVSChemo.R /dev/null 
+## ** BATCH
+## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
 ## R CMD BATCH --vanilla '--args iter_sim=1 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-1.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=2 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-2.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=3 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-3.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=4 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-4.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=5 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-5.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=6 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-6.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=7 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-7.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=8 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-8.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=9 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-9.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=10 n.iter_sim=10' BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-10.Rout &
+## ** BATCH loop
+## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
+## for ITER in `seq 1 10`;
+## do
+## eval 'R CMD BATCH --vanilla "--args iter_sim='$ITER' n.iter_sim=10" BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-ChemoVSChemo-'$ITER'.Rout &'
+## done
 
 rm(list = ls())
 gc()
@@ -59,6 +61,7 @@ if(dir.exists(path.output)==FALSE){
 require(survival)
 require(BuyseTest) ## install.packages("BuyseTest")
 require(survRM2) ## install.packages("survRM2")
+require(FHtest)
 
 ## * Settings
 n.sim <- 1000
@@ -77,6 +80,24 @@ grid <- rbind(grid,
                     threshold = 0.1*Restriction.time_list,
                     scenario = 1))
 
+## pour faire varier les ratio threshold/restriction time
+grid <- rbind(grid,
+              cbind(restrictionTime = Restriction.time_list,
+                    threshold = 0.05*Restriction.time_list,
+                    scenario = 2))
+
+grid <- rbind(grid,
+              cbind(restrictionTime = Restriction.time_list,
+                  threshold = 0.2*Restriction.time_list,
+                    scenario = 3))
+
+## pour obtenir la valeur exacte du net benefit sans censure
+grid <- rbind(grid,
+              cbind(restrictionTime = 1000,
+                    threshold = Threshold_list,
+                    scenario = 4))
+
+
 ## * Loop
 res <- NULL
 for(iSim in 1:n.sim){
@@ -87,7 +108,7 @@ for(iSim in 1:n.sim){
         iTime <- grid$restrictionTime[iGrid]
         iScenario <- grid$scenario[iGrid]
         
-        ## ** Generate data
+        ## ** Generate data 
         TpsFin <- iTime
         HazC <- 0.085
         HazT <- 0.0595
@@ -124,9 +145,13 @@ for(iSim in 1:n.sim){
         pval.RMSTratio <- RMST[["unadjusted.result"]][2,4]
   
         ## ** Analysis using WLR
-        WLR <- (survdiff(Surv(time=Time, event=Event) ~ group, data=tab, rho=1))
-        pval.WLR <- 1 - pchisq(WLR$chisq, 1) 
-
+        WLR <- try(FHtestrcc(Surv(time=Time, event=Event) ~ group, data = tab, rho = 0,lambda = 1))
+        if(inherits(WLR,"try-error")){
+            pval.WLR <- NA
+        }else{
+            pval.WLR <- WLR$pvalue
+        }
+        
         ## ** Analysis using RNBPeron
         rBuyseresPer <- BuyseTest(data=tab,group ~ TTE(Time, status=Event, iThreshold, restriction=iTime),
                                   method.inference = "u-statistic", scoring.rule = "Peron", trace = 0)

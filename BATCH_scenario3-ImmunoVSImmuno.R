@@ -1,18 +1,31 @@
 ## * Header
+## ** interactive
 ## path <- "h:/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/"
 ## setwd(path)
-## source("BATCH_scenario3.R")
+## source("BATCH_scenario3-ImmunoVSImmuno.R")
+## ** slurm
+## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
 ## sbatch -a 1-1 -J 'scenario3-ImmunoVSImmuno' --output=/dev/null --error=/dev/null R CMD BATCH --vanilla BATCH_scenario3.R /dev/null 
+## ** BATCH
+## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
 ## R CMD BATCH --vanilla '--args iter_sim=1 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-1.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=2 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-2.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=3 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-3.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=4 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-4.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=5 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-5.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=6 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-6.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=7 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-7.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=8 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-8.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=9 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-9.Rout &
-## R CMD BATCH --vanilla '--args iter_sim=10 n.iter_sim=10' BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-10.Rout &
+## ** BATCH loop
+## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
+## for ITER in `seq 1 10`;
+## do
+## eval 'R CMD BATCH --vanilla "--args iter_sim='$ITER' n.iter_sim=10" BATCH_scenario3-ImmunoVSImmuno.R output/scenario3-ImmunoVSImmuno/R-ImmunoVSImmuno-'$ITER'.Rout &'
+## done
+
+## [22] 3353323
+## [23] 3353324
+## [24] 3353325
+## [25] 3353326
+## [26] 3353327
+## [27] 3353328
+## [28] 3353329
+## [29] 3353330
+## [30] 3353331
+## [31] 3353332
 
 rm(list = ls())
 gc()
@@ -59,6 +72,7 @@ if(dir.exists(path.output)==FALSE){
 require(survival)
 require(BuyseTest) ## install.packages("BuyseTest")
 require(survRM2) ## install.packages("survRM2")
+require(FHtest) ## install.packages("FHtest")
 
 ## * Settings
 n.sim <- 1000
@@ -77,6 +91,23 @@ grid <- rbind(grid,
                     threshold = 0.1*Restriction.time_list,
                     scenario = 1))
 
+#pour faire varier les ratio threshold/restriction time
+grid <- rbind(grid,
+              cbind(restrictionTime = Restriction.time_list,
+                    threshold = 0.05*Restriction.time_list,
+                    scenario = 2))
+
+grid <- rbind(grid,
+              cbind(restrictionTime = Restriction.time_list,
+                    threshold = 0.2*Restriction.time_list,
+                    scenario = 3))
+
+#pour obtenir la valeur exacte du net benefit sans censure
+grid <- rbind(grid,
+              cbind(restrictionTime = 1000,
+                    threshold = Threshold_list,
+                    scenario = 4))
+
 ## * Loop
 res <- NULL
 for(iSim in 1:n.sim){
@@ -92,7 +123,7 @@ for(iSim in 1:n.sim){
         HR1C <- 0.1
         HR1T <- 0.1
       
-        TpsFin <- 60
+        TpsFin <- iTime
         HazC <- 0.1
         HazT <- 0.07
       
@@ -165,9 +196,13 @@ for(iSim in 1:n.sim){
         pval.RMSTdif <- RMST[["unadjusted.result"]][1,4]
         pval.RMSTratio <- RMST[["unadjusted.result"]][2,4]
   
-        ## ** Analysis using WLR
-        WLR <- (survdiff(Surv(time=Time, event=Event) ~ group, data=tab, rho=1))
-        pval.WLR <- 1 - pchisq(WLR$chisq, 1) 
+        ## ** Analysis using WLR # modifié dans la version 2
+        WLR <- try(FHtestrcc(Surv(time=Time, event=Event) ~ group, data = tab, rho = 0,lambda = 1))
+        if(inherits(WLR,"try-error")){
+            pval.WLR <- NA
+        }else{
+            pval.WLR <- WLR$pvalue
+        }
 
         ## ** Analysis using RNBPeron
         rBuyseresPer <- BuyseTest(data=tab,group ~ TTE(Time, status=Event, iThreshold, restriction=iTime),

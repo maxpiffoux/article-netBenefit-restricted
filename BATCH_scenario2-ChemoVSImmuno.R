@@ -1,9 +1,31 @@
 ## * Header
+## ** interactive
 ## path <- "h:/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/"
 ## setwd(path)
-## source("BATCH_scenario2.R")
+## source("BATCH_scenario2-ChemoVSImmuno.R")
+## ** slurm
+## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
 ## sbatch -a 1-1 -J 'scenario2-ChemoVSImmuno' --output=/dev/null --error=/dev/null R CMD BATCH --vanilla BATCH_scenario2-ChemoVSImmuno.R /dev/null 
+## ** BATCH
+## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
 ## R CMD BATCH --vanilla '--args iter_sim=1 n.iter_sim=10' BATCH_scenario2-ChemoVSImmuno.R output/scenario2-ChemoVSImmuno/R-ChemoVSImmuno-1.Rout &
+## ** BATCH loop
+## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
+## for ITER in `seq 1 10`;
+## do
+## eval 'R CMD BATCH --vanilla "--args iter_sim='$ITER' n.iter_sim=10" BATCH_scenario2-ChemoVSImmuno.R output/scenario2-ChemoVSImmuno/R-ChemoVSImmuno-'$ITER'.Rout &'
+## done
+
+## [32] 3353501
+## [33] 3353502
+## [34] 3353503
+## [35] 3353504
+## [36] 3353505
+## [37] 3353506
+## [38] 3353507
+## [39] 3353508
+## [40] 3353509
+## [41] 3353510
 
 rm(list = ls())
 gc()
@@ -50,6 +72,7 @@ if(dir.exists(path.output)==FALSE){
 require(survival)
 require(BuyseTest) ## install.packages("BuyseTest")
 require(survRM2) ## install.packages("survRM2")
+require(FHtest)
 
 ## * Settings
 n.sim <- 1000
@@ -68,6 +91,24 @@ grid <- rbind(grid,
                     threshold = 0.1*Restriction.time_list,
                     scenario = 1))
 
+## pour faire varier les ratio threshold/restriction time
+grid <- rbind(grid,
+              cbind(restrictionTime = Restriction.time_list,
+                    threshold = 0.05*Restriction.time_list,
+                    scenario = 2))
+
+grid <- rbind(grid,
+              cbind(restrictionTime = Restriction.time_list,
+                    threshold = 0.2*Restriction.time_list,
+                    scenario = 3))
+
+## pour obtenir la valeur exacte du net benefit sans censure
+grid <- rbind(grid,
+              cbind(restrictionTime = 1000,
+                    threshold = Threshold_list,
+                    scenario = 4))
+
+
 ## * Loop
 res <- NULL
 for(iSim in 1:n.sim){
@@ -81,7 +122,7 @@ for(iSim in 1:n.sim){
 
         ## ** Generate data
         HR1 <- 0.1
-        TpsFin <- 60
+        TpsFin <- iTime
         HazC <- 0.1
         HazT2 <- 0.1*(0.75+0.25*HR1)
         HazT3 <- 0.1*(0.5+0.5*HR1)
@@ -135,8 +176,12 @@ for(iSim in 1:n.sim){
         pval.RMSTratio <- RMST[["unadjusted.result"]][2,4]
   
         ## ** Analysis using WLR
-        WLR <- (survdiff(Surv(time=Time, event=Event) ~ group, data=tab, rho=1))
-        pval.WLR <- 1 - pchisq(WLR$chisq, 1) 
+        WLR <- try(FHtestrcc(Surv(time=Time, event=Event) ~ group, data = tab, rho = 0,lambda = 1))
+        if(inherits(WLR,"try-error")){
+            pval.WLR <- NA
+        }else{
+            pval.WLR <- WLR$pvalue
+        }
 
         ## ** Analysis using RNBPeron
         rBuyseresPer <- BuyseTest(data=tab,group ~ TTE(Time, status=Event, iThreshold, restriction=iTime),
