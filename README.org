@@ -1,0 +1,22 @@
+This directory is organized as follows:
+- *the BATCH_SIMULATION files* define the simulation studies. Each
+  file was excecuted 10 times using a different id and therefore a
+  different seed when randomly generating the data. The output of the
+  simulations were saved in a =Results= directory and the trace of the
+  execution of the R code can be found in the =output= directory.
+  
+- *the SUBM_SIMULATION files* are used to run the batch files via a
+  queuing system.
+
+- *the BUILD files* gather the results of the various simulations by
+  reading the data in the =Results= directory and export them in the
+  =Results= folder. 
+
+- *the FIGURE files* TO BE WRITTEN
+  
+- *the TABLE files* TO BE WRITTEN
+
+Note: . Then the file
+  =BUILD_graphtable.R= read these results and generate all figures and
+  tables and save them in the directories =figures= and =tables= (not
+  used in the article). Imports functions defined in =FCT-gg.R=.

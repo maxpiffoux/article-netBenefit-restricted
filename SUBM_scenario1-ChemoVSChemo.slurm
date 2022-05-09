@@ -2,20 +2,19 @@
 
 #SBATCH --job-name=scenario1-ChemoVSChemo  # Job name
 #SBATCH --array=1-10     # Number of jobs
-#SBATCH --partition=standard    # Queue. Use long for run time >8h and standard otherwise
+#SBATCH --partition=long    # Queue. Use long for run time >8h and standard otherwise
 #SBATCH --mem=1G # Memory limit, e.g. reserve 1 GB memory 
 #SBATCH --output=output/scenario1-ChemoVSChemo/slurm-%x-%a-%J.out # Direct output to subdirectory
 #SBATCH --error=output/scenario1-ChemoVSChemo/slurm-%x-%a-%J.out # Same file for output and error
 
 R CMD BATCH --vanilla BATCH_scenario1-ChemoVSChemo.R output/scenario1-ChemoVSChemo/R-$SLURM_JOB_NAME-$SLURM_ARRAY_TASK_ID-$SLURM_JOB_ID.Rout
 
-## go to directory    ## cd h:/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
-                      ## cd ucph/hdir/SundKonsolidering_BioStatHome/Cluster/GPC/article-restricted/
+## go to directory    ## cd /projects/biostat01/people/hpl802/GPC/article-restricted/
 ## clean outputs      ## rm -r ./output/scenario1-ChemoVSChemo/*
 ## clean results      ## rm -r ./Results/scenario1-ChemoVSChemo/*
 ## submission command ## sbatch SUBM_scenario1-ChemoVSChemo.slurm
 
-## submission output  ## Submitted batch job 1237743 (time using C-c t: torsdag 22-04-07 at 14:07) 
+## submission output  ## Submitted batch job 1397788 (time using C-c t: fredag 22-05-06 at 09:16) 
 
 ## init               ## module module load gcc/11.2.0 R/4.1.2
                       ## cat .bash_profile (in the root directory on the server to visualize the current configuration)
