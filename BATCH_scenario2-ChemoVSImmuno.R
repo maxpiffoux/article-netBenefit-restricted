@@ -169,6 +169,8 @@ for(iSim in 1:n.sim){
         RNBGehanSum <- confint(RNBGehan)
         RNBenefit.Gehan <- RNBGehanSum[,"estimate"]
         pval.RNBGehan <- RNBGehanSum[,"p.value"]
+        lowerCI.RNBGehan <- RNBGehanSum[,"lower.ci"]
+        upperCI.RNBGehan <- RNBGehanSum[,"upper.ci"]
 
         ## ** Analysis using RMST
         RMST <- rmst2(time=Time, status=Event, arm=group, tau = NULL, covariates = NULL, alpha = 0.05)
@@ -189,6 +191,8 @@ for(iSim in 1:n.sim){
         rBuyseresPerSum <- confint(rBuyseresPer)
         rBenefit.Buyse <- rBuyseresPerSum[,"estimate"]
         pval.rBuyse <- rBuyseresPerSum[,"p.value"]
+        lowerCI.RNBPeron <- rBuyseresPerSum[,"lower.ci"]
+        upperCI.RNBPeron <- rBuyseresPerSum[,"upper.ci"]
   
         ## ** Gather results
         res <- rbind(res,c(iteration = iSim,
@@ -199,8 +203,12 @@ for(iSim in 1:n.sim){
                            pvalLOGRANK = pval.LR,
                            RNBenefit.Gehan = RNBenefit.Gehan,
                            pval.RNBGehan = pval.RNBGehan,
+                           IC.lower.RNBGehan = lowerCI.RNBGehan,
+                           IC.upper.RNBGehan = upperCI.RNBGehan,
                            RNB = rBenefit.Buyse,
                            pvalRNB = pval.rBuyse,
+                           IC.lower.RNB = lowerCI.RNBPeron,
+                           IC.upper.RNB = upperCI.RNBPeron,
                            pvalWeightedLOGRANK = pval.WLR,
                            pvalRMSTdif = pval.RMSTdif,
                            pvalRMSTratio = pval.RMSTratio))

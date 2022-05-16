@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  7 2022 (11:10) 
 ## Version: 
-## Last-Updated: maj  9 2022 (09:55) 
+## Last-Updated: maj 16 2022 (11:56) 
 ##           By: Brice Ozenne
-##     Update #: 37
+##     Update #: 39
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -63,7 +63,7 @@ setnames(dt.sc1, new = "rtime", old = "Restriction_time")
 
 dtS.sc1 <- dt.sc1[, .(rep = .N, censure = mean(censure),
                       power.logrank = mean(pvalLOGRANK<=0.05),
-                      power.wlogrank = mean(pvalWeightedLOGRANK<=0.05),
+                      power.wlogrank = mean(pvalWeightedLOGRANK<=0.05, na.rm = TRUE),
                       power.rmstDiff = mean(pvalRMSTdif<=0.05),
                       power.rmstRatio = mean(pvalRMSTratio<=0.05),
                       power.nbGehan = mean(pval.RNBGehan<=0.05),
@@ -81,7 +81,7 @@ setnames(dt.sc2, new = "rtime", old = "Restriction_time")
 
 dtS.sc2 <- dt.sc2[, .(rep = .N, censure = mean(censure),
                       power.logrank = mean(pvalLOGRANK<=0.05),
-                      power.wlogrank = mean(pvalWeightedLOGRANK<=0.05),
+                      power.wlogrank = mean(pvalWeightedLOGRANK<=0.05, na.rm = TRUE),
                       power.rmstDiff = mean(pvalRMSTdif<=0.05),
                       power.rmstRatio = mean(pvalRMSTratio<=0.05),
                       power.nbGehan = mean(pval.RNBGehan<=0.05),
@@ -99,14 +99,15 @@ setnames(dt.sc3, new = "rtime", old = "Restriction_time")
 
 dtS.sc3 <- dt.sc3[, .(rep = .N, censure = mean(censure),
                       power.logrank = mean(pvalLOGRANK<=0.05),
-                      power.wlogrank = mean(pvalWeightedLOGRANK<=0.05),
+                      power.wlogrank = mean(pvalWeightedLOGRANK<=0.05, na.rm = TRUE),
                       power.rmstDiff = mean(pvalRMSTdif<=0.05),
                       power.rmstRatio = mean(pvalRMSTratio<=0.05),
                       power.nbGehan = mean(pval.RNBGehan<=0.05),
                       estimate.nbGehan = mean(RNBenefit.Gehan),
                       power.rnbPeron = mean(pvalRNB<=0.05),
-                      estimate.rnbPeron = mean(RNB)
-                      ), by = c("scenario","threshold","rtime") ]
+                      estimate.rnbPeron = mean(RNB),
+                      sd.rnbPeron = sd(RNB)),
+                  by = c("scenario","threshold","rtime") ]
 
 
 ## * export

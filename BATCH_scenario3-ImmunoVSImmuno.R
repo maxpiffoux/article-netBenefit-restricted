@@ -190,13 +190,15 @@ for(iSim in 1:n.sim){
         RNBGehanSum <- confint(RNBGehan)
         RNBenefit.Gehan <- RNBGehanSum[,"estimate"]
         pval.RNBGehan <- RNBGehanSum[,"p.value"]
+        lowerCI.RNBGehan <- RNBGehanSum[,"lower.ci"]
+        upperCI.RNBGehan <- RNBGehanSum[,"upper.ci"]
 
         ## ** Analysis using RMST
         RMST <- rmst2(time=Time, status=Event, arm=group, tau = NULL, covariates = NULL, alpha = 0.05)
         pval.RMSTdif <- RMST[["unadjusted.result"]][1,4]
         pval.RMSTratio <- RMST[["unadjusted.result"]][2,4]
   
-        ## ** Analysis using WLR # modifi� dans la version 2
+        ## ** Analysis using WLR # modifi? dans la version 2
         WLR <- try(FHtestrcc(Surv(time=Time, event=Event) ~ group, data = tab, rho = 0,lambda = 1))
         if(inherits(WLR,"try-error")){
             pval.WLR <- NA
@@ -210,6 +212,8 @@ for(iSim in 1:n.sim){
         rBuyseresPerSum <- confint(rBuyseresPer)
         rBenefit.Buyse <- rBuyseresPerSum[,"estimate"]
         pval.rBuyse <- rBuyseresPerSum[,"p.value"]
+        lowerCI.RNBPeron <- rBuyseresPerSum[,"lower.ci"]
+        upperCI.RNBPeron <- rBuyseresPerSum[,"upper.ci"]
   
         ## ** créer la table de résultats
         res <- rbind(res,c(iteration = iSim,
@@ -220,8 +224,12 @@ for(iSim in 1:n.sim){
                            pvalLOGRANK = pval.LR,
                            RNBenefit.Gehan = RNBenefit.Gehan,
                            pval.RNBGehan = pval.RNBGehan,
+                           IC.lower.RNBGehan = lowerCI.RNBGehan,
+                           IC.upper.RNBGehan = upperCI.RNBGehan,
                            RNB = rBenefit.Buyse,
                            pvalRNB = pval.rBuyse,
+                           IC.lower.RNB = lowerCI.RNBPeron,
+                           IC.upper.RNB = upperCI.RNBPeron,
                            pvalWeightedLOGRANK = pval.WLR,
                            pvalRMSTdif = pval.RMSTdif,
                            pvalRMSTratio = pval.RMSTratio))
