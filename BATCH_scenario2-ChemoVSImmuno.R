@@ -75,7 +75,7 @@ require(survRM2) ## install.packages("survRM2")
 require(FHtest)
 
 ## * Settings
-n.sim <- 1000
+n.sim <- 500
 
 Tps.inclusion <- 12 
 Restriction.time_list <- c(12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57,60) ## every 3 months
@@ -164,13 +164,9 @@ for(iSim in 1:n.sim){
         Taux.cens.reel <- 1-mean(Event)
   
         ## ** Analysis using RNBGehan
-        RNBGehan <- BuyseTest(data=tab,group ~ TTE(Time, status=Event, iThreshold),
+        NBGehan <- BuyseTest(data=tab,group ~ TTE(Time, status=Event, iThreshold),
                               method.inference = "u-statistic", scoring.rule = "Gehan", trace = 0)
-        RNBGehanSum <- confint(RNBGehan)
-        RNBenefit.Gehan <- RNBGehanSum[,"estimate"]
-        pval.RNBGehan <- RNBGehanSum[,"p.value"]
-        lowerCI.RNBGehan <- RNBGehanSum[,"lower.ci"]
-        upperCI.RNBGehan <- RNBGehanSum[,"upper.ci"]
+        NBGehan.confint <- confint(NBGehan)
 
         ## ** Analysis using RMST
         RMST <- rmst2(time=Time, status=Event, arm=group, tau = NULL, covariates = NULL, alpha = 0.05)
@@ -186,13 +182,9 @@ for(iSim in 1:n.sim){
         }
 
         ## ** Analysis using RNBPeron
-        rBuyseresPer <- BuyseTest(data=tab,group ~ TTE(Time, status=Event, iThreshold, restriction=iTime),
-                                  method.inference = "u-statistic", scoring.rule = "Peron", trace = 0)
-        rBuyseresPerSum <- confint(rBuyseresPer)
-        rBenefit.Buyse <- rBuyseresPerSum[,"estimate"]
-        pval.rBuyse <- rBuyseresPerSum[,"p.value"]
-        lowerCI.RNBPeron <- rBuyseresPerSum[,"lower.ci"]
-        upperCI.RNBPeron <- rBuyseresPerSum[,"upper.ci"]
+        RNBPeron <- BuyseTest(data=tab,group ~ TTE(Time, status=Event, iThreshold, restriction=iTime),
+                              method.inference = "u-statistic", scoring.rule = "Peron", trace = 0)
+        RNBPeron.confint <- confint(RNBPeron)
   
         ## ** Gather results
         res <- rbind(res,c(iteration = iSim,
@@ -200,18 +192,20 @@ for(iSim in 1:n.sim){
                            scenario = iScenario,
                            Threshold = iThreshold,
                            "Taux censure reel" = Taux.cens.reel,
-                           pvalLOGRANK = pval.LR,
-                           RNBenefit.Gehan = RNBenefit.Gehan,
-                           pval.RNBGehan = pval.RNBGehan,
-                           IC.lower.RNBGehan = lowerCI.RNBGehan,
-                           IC.upper.RNBGehan = upperCI.RNBGehan,
-                           RNB = rBenefit.Buyse,
-                           pvalRNB = pval.rBuyse,
-                           IC.lower.RNB = lowerCI.RNBPeron,
-                           IC.upper.RNB = upperCI.RNBPeron,
-                           pvalWeightedLOGRANK = pval.WLR,
-                           pvalRMSTdif = pval.RMSTdif,
-                           pvalRMSTratio = pval.RMSTratio))
+                           estimate.NBGehan = NBGehan.confint[,"estimate"],
+                           se.NBGehan = NBGehan.confint[,"se"],
+                           lower.NBGehan = NBGehan.confint[,"lower.ci"],
+                           upper.NBGehan = NBGehan.confint[,"upper.ci"],
+                           pval.NBGehan = NBGehan.confint[,"p.value"],
+                           estimate.RNBPeron = RNBPeron.confint[,"estimate"],
+                           se.RNBPeron = RNBPeron.confint[,"se"],
+                           lower.RNBPeron = RNBPeron.confint[,"lower.ci"],
+                           upper.RNBPeron = RNBPeron.confint[,"upper.ci"],
+                           pval.RNBPeron = RNBPeron.confint[,"p.value"],
+                           pval.LOGRANK = pval.LR,
+                           pval.WeightedLOGRANK = pval.WLR,
+                           pval.RMSTdif = pval.RMSTdif,
+                           pval.RMSTratio = pval.RMSTratio))
 
     }
     saveRDS(res, file = file.path(path.res,paste0("simul_ChemoVSImmuno_",iter_sim,"(tempo).rds")))

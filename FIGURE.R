@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: maj  9 2022 (09:53) 
 ## Version: 
-## Last-Updated: maj  9 2022 (09:58) 
+## Last-Updated: jun  1 2022 (19:46) 
 ##           By: Brice Ozenne
-##     Update #: 8
+##     Update #: 14
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -19,7 +19,7 @@ library(data.table)
 library(ggplot2)
 
 if(system("whoami",intern=TRUE)=="unicph\\hpl802"){  
-
+    setwd("x:/GPC/article-restricted/")
 }else{
     setwd("C:/Users/max/Desktop/simulation_peron/simulation-article-restricted")
 }
@@ -28,6 +28,7 @@ if(system("whoami",intern=TRUE)=="unicph\\hpl802"){
 dtS.sc1 <- readRDS(file = "Results/simSummary-ChemoVSChemo.rds")
 dtS.sc2 <- readRDS(file = "Results/simSummary-ChemoVSImmuno.rds")
 dtS.sc3 <- readRDS(file = "Results/simSummary-ImmunoVSImmuno.rds")
+dtS.sc4 <- readRDS(file = "Results/simSummary-type1.rds")
 
 ## * Generate plots
 ## ** scenario 1
@@ -126,6 +127,18 @@ ggPower3.bis <- ggPower3.bis + geom_point() + geom_line() + facet_wrap(~scenario
 ggPower3.bis <- ggPower3.bis + xlab("Follow-up time (months)")
 ggPower3.bis
 
+## ** scenario 4
+range(dtS.sc4$power.logrank)
+range(dtS.sc4$power.wlogrank)
+range(dtS.sc4$power.rmstDiff)
+range(dtS.sc4$power.nbGehan)
+range(dtS.sc4$power.rnbPeron)
+
+ggType1 <- ggplot(dtS.sc4[scenario==0], aes(x = rtime, y = power.rnbPeron))
+ggType1 <- ggType1 + geom_point() + geom_line() + facet_wrap(~threshold, labeller = label_both)
+ggType1 <- ggType1 + xlab("Follow-up time (months)") + ylab("Type 1 error")
+ggType1
+
 ## * export
 ggsave(ggBenefit1, filename = "Results/ggBenefit-ChemoVSChemo-scenario0.pdf")
 ggsave(ggBenefit1.bis, filename = "Results/ggBenefit-ChemoVSChemo-scenario123.pdf")
@@ -144,6 +157,7 @@ ggsave(ggBenefit3.bis, filename = "Results/ggBenefit-ImmunoVSImmuno-scenario123.
 
 ggsave(ggPower3, filename = "Results/ggPower-ImmunoVSImmuno-scenario0.pdf")
 ggsave(ggPower3.bis, filename = "Results/ggPower-ImmunoVSImmuno-scenario123.pdf")
+
 
 ##----------------------------------------------------------------------
 ### FIGURE.R ends here
