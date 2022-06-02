@@ -189,11 +189,6 @@ for(iSim in 1:n.sim){ ## iSim <- 1
         pval.LR <- 1 - pchisq(LR$chisq, 1) 
         Taux.cens.reel <- 1-mean(Event)
   
-        ## ** Analysis using LR
-        LR <- (survdiff(Surv(time=Time, event=Event) ~ group, data=tab, rho=0))
-        pval.LR <- 1 - pchisq(LR$chisq, 1) 
-        Taux.cens.reel <- 1-mean(Event)
-  
         ## ** analysis using RNBGehan
         NBGehan <- BuyseTest(data=tab,group ~ TTE(Time, status=Event, iThreshold),
                               method.inference = "u-statistic", scoring.rule = "Gehan", trace = 0)
