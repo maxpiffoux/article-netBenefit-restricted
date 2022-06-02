@@ -141,6 +141,12 @@ for(iSim in 1:n.sim){ ## iSim <- 1
         t2 <- 12
         t3 <- 17.75
         t4 <- 24
+        
+        t1C <- 12
+        t2C <- 24
+        t3C <- 36
+        t4C <- 48
+        
         n.Treatment <- 200
         n.Control <- 200
         n <- n.Treatment+n.Control
@@ -152,32 +158,36 @@ for(iSim in 1:n.sim){ ## iSim <- 1
         TimeEvent.Ctr3 <- rexp(n.Control,HazT3C)
         TimeEvent.Ctr4 <- rexp(n.Control,HazT4C)
         TimeEvent.Ctr5 <- rexp(n.Control,HazT5C)
-      
-        TimeEvent.Ctr <- ifelse(TimeEvent.Ctr1<t1,TimeEvent.Ctr1,
-                         ifelse(t1+TimeEvent.Ctr2<t2,t1+TimeEvent.Ctr2,
-                         ifelse(t2+TimeEvent.Ctr3<t3,t2+TimeEvent.Ctr3,
-                         ifelse(t3+TimeEvent.Ctr4<t4,t3+TimeEvent.Ctr4,
-                                t4+TimeEvent.Ctr5))))
-      
+        
+        TimeEvent.Ctr <- ifelse(TimeEvent.Ctr1<t1C,TimeEvent.Ctr1,
+                              ifelse(t1C+TimeEvent.Ctr2<t2C,t1C+TimeEvent.Ctr2,
+                                     ifelse(t2C+TimeEvent.Ctr3<t3C,t2C+TimeEvent.Ctr3,
+                                            ifelse(t3C+TimeEvent.Ctr4<t4C,t3C+TimeEvent.Ctr4,
+                                                   t4C+TimeEvent.Ctr5))))
+        
         ## *** in treatment group
         TimeEvent.Tr1 <- rexp(n.Control,HazT)
         TimeEvent.Tr2 <- rexp(n.Control,HazT2T)
         TimeEvent.Tr3 <- rexp(n.Control,HazT3T)
         TimeEvent.Tr4 <- rexp(n.Control,HazT4T)
         TimeEvent.Tr5 <- rexp(n.Control,HazT5T)
-      
         TimeEvent.Tr <- ifelse(TimeEvent.Tr1<t1,TimeEvent.Tr1,
-                        ifelse(t1+TimeEvent.Tr2<t2,t1+TimeEvent.Tr2,
-                        ifelse(t2+TimeEvent.Tr3<t3,t2+TimeEvent.Tr3,
-                        ifelse(t3+TimeEvent.Tr4<t4,t3+TimeEvent.Tr4,
-                               t4+TimeEvent.Tr5))))
-      
+                             ifelse(t1+TimeEvent.Tr2<t2,t1+TimeEvent.Tr2,
+                                    ifelse(t2+TimeEvent.Tr3<t3,t2+TimeEvent.Tr3,
+                                           ifelse(t3+TimeEvent.Tr4<t4,t3+TimeEvent.Tr4,
+                                                  t4+TimeEvent.Tr5))))
+        
         TimeEvent <- c(TimeEvent.Tr,TimeEvent.Ctr)
-        Time.Cens <- runif(n,TpsFin-Tps.inclusion,TpsFin) #varier temps de censure
+        Time.Cens <- runif(n,48,TpsFin)
         Time <- pmin(Time.Cens,TimeEvent)
         Event <- Time==TimeEvent
         Event <- as.numeric(Event)
         tab <- data.frame(group,Time,Event)
+        
+        ## ** Analysis using LR
+        LR <- (survdiff(Surv(time=Time, event=Event) ~ group, data=tab, rho=0))
+        pval.LR <- 1 - pchisq(LR$chisq, 1) 
+        Taux.cens.reel <- 1-mean(Event)
   
         ## ** Analysis using LR
         LR <- (survdiff(Surv(time=Time, event=Event) ~ group, data=tab, rho=0))

@@ -121,17 +121,17 @@ for(iSim in 1:n.sim){
         iScenario <- grid$scenario[iGrid]
 
         ## ** Generate data
-        HR1 <- 0.1
+        HR1 <- 0.05
         TpsFin <- iTime
-        HazC <- 0.1
-        HazT2 <- 0.1*(0.75+0.25*HR1)
-        HazT3 <- 0.1*(0.5+0.5*HR1)
-        HazT4 <- 0.1*(0.25+0.75*HR1)
-        HazT5 <- 0.1*(HR1)
-        t1 <- 4
-        t2 <- 12
-        t3 <- 18.5
-        t4 <- 36
+        HazC <- 0.05
+        HazT2 <- 0.05*(0.75+0.25*HR1)
+        HazT3 <- 0.05*(0.5+0.5*HR1)
+        HazT4 <- 0.05*(0.25+0.75*HR1)
+        HazT5 <- 0.05*(HR1)
+        t1 <- 18
+        t2 <- 24
+        t3 <- 36
+        t4 <- 48
         n.Treatment <- 200
         n.Control <- 200
         n <- n.Treatment+n.Control
